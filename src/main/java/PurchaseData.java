@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.Date;
 
-public class PurchaseData {
+public class PurchaseData implements Serializable {
     protected String title;
     protected Date date;
     protected int sum;
