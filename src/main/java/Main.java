@@ -11,13 +11,13 @@ import java.util.Map;
 public class Main {
     private static final int PORT = 8989;
 
-    protected static List<PurchaseData> purchaseDataList = new ArrayList<>();
-
-
     public static void main(String[] args) {
         MaxCountCategory maxCountCategory;
+        AllPurchaseData allPurchaseData = null;
+        List<PurchaseData> purchaseDataList = null;
         Map<String, String> mapOfGoods = readTsvFile(new File("categories.tsv"));// из файла tsv
         String s;
+        File f = new File("data.bin");
         try (ServerSocket serverSocket = new ServerSocket(PORT);) { // стартуем сервер один(!) раз
             while (true) { // в цикле(!) принимаем подключения
                 try (
@@ -40,14 +40,25 @@ public class Main {
                             purchaseData.setCategory("другое");
                         }
                     }
+                    if (f.exists()) {
+                        allPurchaseData = AllPurchaseData.readBinFile(f);
+                        purchaseDataList = allPurchaseData.getPurchaseDataList();
+                    } else {
+                        purchaseDataList = new ArrayList<>();
+                    }
+                    for (PurchaseData data : purchaseDataList) {
+                        System.out.println(data);
+                    }
+                    purchaseDataList.add(purchaseData);//добавляем в лист покупок новую покупку
 
-                    purchaseDataList.add(purchaseData); //добавляем в лист покупок новую покупку
                     PurchaseData p1 = MaxCountCategory.maxCountCategory(purchaseDataList);
                     PurchaseData p2 = MaxCountCategory.maxCountYearCategory(purchaseDataList, purchaseData);
                     PurchaseData p3 = MaxCountCategory.maxCountMonthCategory(purchaseDataList, purchaseData);
                     PurchaseData p4 = MaxCountCategory.maxCountDayCategory(purchaseDataList, purchaseData);
                     maxCountCategory = new MaxCountCategory(p1, p2, p3, p4);
                     out.println(printJson(maxCountCategory)); //посылаем строку с maxcategory
+                    AllPurchaseData allData = new AllPurchaseData(purchaseDataList);
+                    allData.writeBinFile(f);
                 }
             }
         } catch (IOException e) {
